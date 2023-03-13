@@ -5,48 +5,25 @@ import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken'
 
 const reValidate = (req: Request, res: Response, next: NextFunction) => {
-    const { authorization } = req.headers;
-    const accessToken = authorization?.includes('Bearer') && authorization?.split(' ').pop()
-    if (accessToken) {
-        jwt.verify(accessToken as string, process.env.ACCESS_SECRET as string, (err, decoded) => {
-            if (decoded) {
-                return res.status(200).json({
-                    message: "User Authorized"
-                })
-            }
-
-            if (err) {
-                Logging.error(`Accesstoken: ${err.message}`)
-                const { refreshToken } = req.cookies
-
-                if (!refreshToken) {
-                    Logging.error('No Refresh Token Found')
-                    return res.status(403).json({
-                        message: 'Unauthorized | No Refresh Token'
-                    })
-                }
-
-                jwt.verify(refreshToken as string, process.env.REFRESH_SECRET as string, (err, decoded) => {
-                    if (err) {
-                        Logging.error('Refresh Token Invalid')
-                        return res.status(403).json({
-                            message: 'Unauthorized | Invalid Refresh Token'
-                        })
-                    }
-                    const { username, email, roles } = decoded as { username: string; email: string; roles: string[] };
-                    const newAccessToken = jwt.sign({ username, email, roles }, process.env.ACCESS_SECRET as string, { expiresIn: '60s' });
-                    res.clearCookie('refreshToken', { httpOnly: true })
-                    return res.status(201).json({ username, email, roles, accessToken: newAccessToken });
-                })
-            }
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+        Logging.error('No Refresh Token Found')
+        return res.status(403).json({
+            message: 'Unauthorized | No Refresh Token'
         })
     }
 
-    if (!accessToken) {
-        return res.status(401).json({
-            message: 'No Token recieved'
-        })
-    }
+    jwt.verify(refreshToken as string, process.env.REFRESH_SECRET as string, (err, decoded) => {
+        if (err) {
+            Logging.error('Refresh Token Invalid')
+            return res.status(403).json({
+                message: 'Unauthorized | Invalid Refresh Token'
+            })
+        }
+        const { username, email, roles } = decoded as { username: string; email: string; roles: string[] };
+        const newAccessToken = jwt.sign({ username, email, roles }, process.env.ACCESS_SECRET as string, { expiresIn: '10s' });
+        return res.status(201).json({ username, email, roles, accessToken: newAccessToken });
+    })
 }
 
 const Login = async (req: Request, res: Response, next: NextFunction) => {
@@ -66,7 +43,9 @@ const Login = async (req: Request, res: Response, next: NextFunction) => {
     await User.findOne({ $or: [{ username }, { email }] })
         .then(async (user) => {
             if (!user) {
-                throw new Error('User not found || Invalid Credentials ')
+                return res.status(401).json({
+                    message: 'Invalid Credentials'
+                })
             }
 
             else {
@@ -93,11 +72,12 @@ const Login = async (req: Request, res: Response, next: NextFunction) => {
                         }
                         Logging.log(`${user.username} logged in`)
                         const refreshToken = jwt.sign(usr, process.env.REFRESH_SECRET as string)
-                        res.cookie('refreshToken', refreshToken)
+                        res.cookie('refreshToken', refreshToken, {httpOnly: true})
                         return res.status(200).json({
+                            status: true,
                             user: {
                                 ...usr,
-                                accessToken: jwt.sign(usr, process.env.ACCESS_SECRET as string, { expiresIn: '60s' })
+                                accessToken: jwt.sign(usr, process.env.ACCESS_SECRET as string, { expiresIn: '10s' })
                             }
                         })
                     }
@@ -177,8 +157,17 @@ const Register = async (req: Request, res: Response, next: NextFunction) => {
         })
 }
 
+const Logout = async (req: Request, res: Response, next: NextFunction) => {
+    res.clearCookie('refreshToken', { httpOnly: true })
+    return res.status(200).json({
+        status: true,
+        message: 'Logout Successful'
+    })
+}
+
 export default {
     Login,
     Register,
-    reValidate
+    reValidate,
+    Logout
 };

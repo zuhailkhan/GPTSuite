@@ -7,6 +7,8 @@ UserRoute.post('/login', UserController.Login)
 
 UserRoute.post('/register', UserController.Register)
 
-UserRoute.get('/revalidate', UserController.reValidate)
+UserRoute.get('/refresh', UserController.reValidate)
+
+UserRoute.get('/logout', UserController.Logout)
 
 export default UserRoute;

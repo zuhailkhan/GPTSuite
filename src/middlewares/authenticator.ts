@@ -3,15 +3,16 @@ import { Request, Response, NextFunction } from 'express';
 import Logging from '../library/Logging';
 const authenticator = (req: Request, res: Response, next: NextFunction) => {
     const { authorization } = req.headers;
-    if(!authorization) {
+    const token = authorization?.includes('Bearer') &&  authorization?.split(' ').pop();
+    
+    if(!token) {
         return res.status(401).json({
             message: 'Unauthorized'
         })
     }
-    const token = authorization.split(' ')[1];
 
     try {
-        jwt.verify(token, process.env.ACCESS_SECRET as string, (err, user) => {
+        jwt.verify(token as string, process.env.ACCESS_SECRET as string, (err, user) => {
             if(user){
                 Logging.info('User Validated')
                 next()
@@ -31,9 +32,9 @@ const authenticator = (req: Request, res: Response, next: NextFunction) => {
                         })
                     }
 
-                    if(user) {
-                        
-                    }
+                    // if(user) {
+                    //    return res.redirect('/refresh')
+                    // } 
                 })
                 next()
             }

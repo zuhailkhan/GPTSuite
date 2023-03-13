@@ -10,10 +10,11 @@ import cookieParser from 'cookie-parser'
 const app: Application = express();
 
 const corsOptions: CorsOptions = {
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: ['http://localhost:8014'],
+    methods: 'GET,POST',
     preflightContinue: false,
-    optionsSuccessStatus: 204
+    optionsSuccessStatus: 204,
+    credentials: true,
 }
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
