@@ -4,6 +4,7 @@ import cors, { CorsOptions } from 'cors'
 import { dbconnect } from "./config/db.connect";
 import Logging from "./library/Logging";
 import UserRoute from "./routes/UserRoute";
+import ChatRoute from "./routes/ChatRoute";
 import authenticator from "./middlewares/authenticator";
 import cookieParser from 'cookie-parser'
 
@@ -21,6 +22,7 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/User', UserRoute)
+app.use('/Chat', ChatRoute)
 
 app.post('/ping', authenticator, (req: Request, res: Response) => {
     res.send('pong')

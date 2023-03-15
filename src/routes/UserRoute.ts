@@ -11,4 +11,6 @@ UserRoute.get('/refresh', UserController.reValidate)
 
 UserRoute.get('/logout', UserController.Logout)
 
+UserRoute.get('/verify', UserController.verifyLogin)
+
 export default UserRoute;

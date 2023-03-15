@@ -21,8 +21,9 @@ const reValidate = (req: Request, res: Response, next: NextFunction) => {
             })
         }
         const { username, email, roles } = decoded as { username: string; email: string; roles: string[] };
-        const newAccessToken = jwt.sign({ username, email, roles }, process.env.ACCESS_SECRET as string, { expiresIn: '10s' });
-        return res.status(201).json({ username, email, roles, accessToken: newAccessToken });
+        const newAccessToken = jwt.sign({ username, email, roles }, process.env.ACCESS_SECRET as string, { expiresIn: '15s' });
+        res.cookie('accessToken', newAccessToken, { httpOnly: true, maxAge: 400000 });
+        return res.status(201).json({ username, email, roles, jti: Math.floor(Math.random() * 1000000) });
     })
 }
 
@@ -69,16 +70,16 @@ const Login = async (req: Request, res: Response, next: NextFunction) => {
                             username,
                             email,
                             roles,
+                            jti: Math.floor(Math.random() * 1000000)
                         }
                         Logging.log(`${user.username} logged in`)
                         const refreshToken = jwt.sign(usr, process.env.REFRESH_SECRET as string)
-                        res.cookie('refreshToken', refreshToken, {httpOnly: true})
+                        const accessToken = jwt.sign(usr, process.env.ACCESS_SECRET as string, { expiresIn: '5s' })
+                        res.cookie('accessToken', accessToken, { httpOnly: true, maxAge: 400000 })
+                        res.cookie('refreshToken', refreshToken, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 })
                         return res.status(200).json({
                             status: true,
-                            user: {
-                                ...usr,
-                                accessToken: jwt.sign(usr, process.env.ACCESS_SECRET as string, { expiresIn: '10s' })
-                            }
+                            user: usr
                         })
                     }
                 })
@@ -158,10 +159,37 @@ const Register = async (req: Request, res: Response, next: NextFunction) => {
 }
 
 const Logout = async (req: Request, res: Response, next: NextFunction) => {
-    res.clearCookie('refreshToken', { httpOnly: true })
+    res.clearCookie('accessToken', { httpOnly: true, maxAge: 0 })
+    res.clearCookie('refreshToken', { httpOnly: true, maxAge: 0 })
     return res.status(200).json({
         status: true,
         message: 'Logout Successful'
+    })
+}
+
+const verifyLogin = (req: Request, res: Response, next: NextFunction) => {
+    const accessToken = req.cookies.accessToken;
+    Logging.warn(accessToken)
+    if (!accessToken) {
+        return res.status(401).json({
+            message: 'Unauthorized | No Access Token'
+        })
+    }
+
+    jwt.verify(accessToken as string, process.env.ACCESS_SECRET as string, (err, decoded) => {
+        if (err) {
+            Logging.error(`Access Token Invalid ${err}`)
+            return res.status(403).json({
+                message: 'Unauthorized | Invalid Access Token'
+            })
+        }
+
+        if(decoded) {
+            return res.status(200).json({
+                status: true,
+                message: 'User Authorized'
+            })
+        }
     })
 }
 
@@ -169,5 +197,6 @@ export default {
     Login,
     Register,
     reValidate,
-    Logout
+    Logout, 
+    verifyLogin
 };

@@ -2,8 +2,7 @@ import jwt from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express';
 import Logging from '../library/Logging';
 const authenticator = (req: Request, res: Response, next: NextFunction) => {
-    const { authorization } = req.headers;
-    const token = authorization?.includes('Bearer') &&  authorization?.split(' ').pop();
+    const token = req.cookies.accessToken;
     
     if(!token) {
         return res.status(401).json({
