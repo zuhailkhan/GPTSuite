@@ -6,12 +6,13 @@
   "scripts": {
     "dev": "ts-node-dev src/index.ts",
     "build": "tsc",
-    "start": "node dist"
+    "start": "npm run build && node --inspect dist"
   },
   "author": "zuhailkhan",
   "license": "ISC",
   "dependencies": {
     "@types/mongoose": "^5.11.97",
+    "axios": "^1.7.2",
     "bcrypt": "^5.1.0",
     "chalk": "^4.1.2",
     "cookie-parser": "^1.4.6",

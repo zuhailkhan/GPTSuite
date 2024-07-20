@@ -28,7 +28,7 @@ app.post('/ping', authenticator, (req: Request, res: Response) => {
     res.send('pong')
 })
 
-const PORT = process.env.PORT || 8013
+const PORT = process.env.PORT ?? 8013
 
 const startServer = async ( ) => {
     
