@@ -9,6 +9,11 @@ ChatRoute.post('/talkBasic', authenticator, ChatController.basicResponse);
 
 ChatRoute.post('/talkStream', authenticator, ChatController.streamResponse);
 
-ChatRoute.get('/listModels', authenticator, ChatController.listModels);
+ChatRoute.post('/talk/:mode', authenticator, ChatController.getResponseFromModel)
+
+ChatRoute.get('/listModels/openAi', authenticator, ChatController.listModels);
+
+ChatRoute.get('/listModels', authenticator, ChatController.getChatModelsList);
+
 
 export default ChatRoute;
