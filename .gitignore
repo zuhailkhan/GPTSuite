@@ -1,2 +1,32 @@
-node_modules
-.env
+# Ignore node_modules
+node_modules/
+
+# Ignore .git directory
+.git/
+
+# Ignore TypeScript configuration files
+tsconfig.json
+tsconfig.node.json
+
+# Ignore coverage reports
+coverage/
+
+# Ignore Jest configuration files
+jest.config.ts
+jest.config.node.ts
+
+# Ignore test results
+test/junit.xml
+
+# Ignore IDE specific files
+.idea/
+*.suo
+*.user
+*.lock
+
+# Ignore build artifacts
+dist/
+build/
+
+# Ignore any files that shouldn't be tracked by Git
+.DS_Store
