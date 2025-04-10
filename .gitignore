@@ -30,3 +30,6 @@ build/
 
 # Ignore any files that shouldn't be tracked by Git
 .DS_Store
+.nx/installation
+.nx/cache
+.nx/workspace-data
